@@ -1,0 +1,19 @@
+<package>
+  <description brief="cams">
+
+     cams
+
+  </description>
+  <author>sahashranshu maurya</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cams</url>
+  <depend package="roscpp"/>
+  <depend package="image_transport"/>
+  <depend package="cv_bridge"/>
+  <depend package="std_msgs"/>
+  <depend package="resources"/>
+
+</package>
+
+
