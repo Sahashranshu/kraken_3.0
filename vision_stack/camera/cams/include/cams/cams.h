@@ -9,6 +9,7 @@
 #include <std_msgs/String.h>
 #include <resources/topicHeader.h>
 #include <fstream>
+#include <string>
 
 
 using namespace std;
@@ -55,9 +56,9 @@ typedef class __camInterface{
 		uint64_t Index2GUID(int);
 
 		int GUID2Index();
-		bool getCamSettings(uint64_t);
-		bool getCamSettings(int);
-		bool getCamSettings();
+		bool getCamDetails(uint64_t);
+		bool getCamDetails(int);
+		bool getCamDetails();
 		bool printCamDetails(uint64_t, const char*);
 		bool printCamDetails(int, const char*);
 		bool printCamDetails(const char*);
@@ -73,10 +74,9 @@ typedef class __camInterface{
 //constructor function with GUID index.
 camInterface::__camInterface(uint64_t GUID){
 	camList = 0;
-	
 	guid = GUID;
 	if(!dc1394.dc){
-	  cout<<"Failed initializing the driver structure.\n";
+	  ROS_INFO_STREAM("Failed initializing the driver structure.\n");
 	  ros::shutdown();
 	}
 }
@@ -84,13 +84,13 @@ camInterface::__camInterface(uint64_t GUID){
 camInterface::__camInterface(int index){
 	uint64_t GUID = Index2GUID(index);
 	if(GUID){
-		cout<<"Error retrieving GUID\n";
+		ROS_INFO_STREAM("Error retrieving GUID\n");
 		ros::shutdown();
 	}
 	camList = 0;
 	guid = GUID;
 	if(!dc1394.dc){
-	  cout<<"Failed initializing the driver structure.\n";
+	  ROS_INFO_STREAM("Failed initializing the driver structure.\n");
 	  ros::shutdown();
 	}
 }
@@ -99,7 +99,7 @@ camInterface::__camInterface(int index){
 camInterface::__camInterface(){
 	camList = 0;
 	if(!dc1394.dc){
-	  cout<<"Failed initializing the driver structure.\n";
+	  ROS_INFO_STREAM("Failed initializing the driver structure.\n");
 	  ros::shutdown();
 	}
 }
@@ -114,21 +114,23 @@ int camInterface::GUID2Index(uint64_t GUID){
 int camInterface::GUID2Index(){
 	bool result = true;
 	if(!guid){
-	  cout<<"GUID not known already\n";
-	  return false;
+	  ROS_INFO_STREAM("GUID not known already\n");
+	  return -1;
 	}	
 	err = dc1394_camera_enumerate(dc1394.dc, &camList);
 	if (err < DC1394_SUCCESS || !camList){
-	  cout<<"Failed retrieving camera list\n";
+	  ROS_INFO_STREAM("Failed retrieving camera list\n");
 	  return -1;
 	}
+
 	for(int index=0; index < (int)camList->num; ++index){
-	  if(guid == camList->ids[index].guid)
-	    result = false;
-	    return index;
+		if(guid == camList->ids[index].guid){
+			result = false;
+			return index;
+		}
 	}
 	if(!result){
-	  cout<<"No cameras found of given GUID.\n";
+	  ROS_INFO_STREAM("No cameras found of given GUID.\n");
 	  return -1;
 	}
 	return -1;
@@ -138,54 +140,54 @@ int camInterface::GUID2Index(){
 uint64_t camInterface::Index2GUID(int index){
 	err = dc1394_camera_enumerate(dc1394.dc, &camList);
 	if (err < DC1394_SUCCESS || !camList){
-		cout<<"Failed retrieving camera list\n";
+		ROS_INFO_STREAM("Failed retrieving camera list\n");
 		return -1;
 	}
 	if(index > (int)camList->num){
-		cout<<"Given index exceeds the total number of cameras operational on system. Invalid Index.\n";
+		ROS_INFO_STREAM("Given index exceeds the total number of cameras operational on system. Invalid Index.\n");
 		return -1;
 	}
 	return camList->ids[index].guid;
 }
 
-///getCamSettings() - wrapper function for setting camera, with GUID//////
-bool camInterface::getCamSettings(uint64_t GUID){
+///getCamDetails() - wrapper function for setting camera, with GUID//////
+bool camInterface::getCamDetails(uint64_t GUID){
 	guid = GUID;
-	return getCamSettings();
+	return getCamDetails();
 }
 
-bool camInterface::getCamSettings(int index){
+bool camInterface::getCamDetails(int index){
 	uint64_t GUID = Index2GUID(index);
 	if(GUID){
-		cout<<"Error retrieving GUID\n";
+		ROS_INFO_STREAM("Error retrieving GUID\n");
 		ros::shutdown();
 	}
 	guid = GUID;
-	return getCamSettings();
+	return getCamDetails();
 }
 
-//getCamSettings without guid////////////////////////////////////////////
-bool camInterface::getCamSettings(){
+//getCamDetails without guid////////////////////////////////////////////
+bool camInterface::getCamDetails(){
 	if(!guid){
-	  cout<<"GUID not known already\n";
+	  ROS_INFO_STREAM("GUID not known already\n");
 	  return false;
 	}
 	//creating new camera structure.
 	cam = dc1394_camera_new(dc1394.dc, guid);
 	if(!cam){
-	  cout<<"No cameras found of given GUID.\n";
+	  ROS_INFO_STREAM("No cameras found of given GUID.\n");
 	  return false;
 	}
 	//extracting list of features in an array.
 	err = dc1394_feature_get_all(cam, camFeatures);
 	if(err < DC1394_SUCCESS){
-	  cout<<"Error extracting list of features from camera\n";
+	  ROS_INFO_STREAM("Error extracting list of features from camera\n");
 	  return false;
 	}
 	//extracting bounds 
 	err = dc1394_feature_get(cam, camFeatures->feature);
 	if(err < DC1394_SUCCESS){
-	  cout<<"Feature list's end limit reached\n";
+	  ROS_INFO_STREAM("Feature list's end limit reached\n");
 	  return false;
 	}
 	return true;
@@ -201,7 +203,7 @@ bool camInterface::printCamDetails(uint64_t GUID, const char* detailsFilename){
 bool camInterface::printCamDetails(int index, const char* detailsFilename){
 	uint64_t GUID = Index2GUID(index);
 	if(GUID){
-		cout<<"Error retrieving GUID\n";
+		ROS_INFO_STREAM("Error retrieving GUID\n");
 		ros::shutdown();
 	}
 	guid = GUID;
@@ -211,21 +213,23 @@ bool camInterface::printCamDetails(int index, const char* detailsFilename){
 //without GUID
 bool camInterface::printCamDetails(const char* detailsFilename){
 	if(!guid){
-	  cout<<"GUID not known already\n";
+	  ROS_INFO_STREAM("GUID not known already\n");
 	  return false;
 	}
 	FILE *file;	
 	file = fopen(detailsFilename, "w");
 	if(!file){
-	  cout<<"Error opening file\n";
+	  ROS_INFO_STREAM("Error opening file\n");
 	  return false;
 	}		
 	if(!camFeatures){
-		getCamSettings(guid);
+		if(getCamDetails(guid)){
+			ROS_INFO_STREAM("Error retrieving camera details\n");
+		}
 	}
 	err = dc1394_feature_print_all(camFeatures, file);
 	if(err < DC1394_SUCCESS){
-	    cout<<"Error printing feature list\n";
+	    ROS_INFO_STREAM("Error printing feature list\n");
 	    return false;
 	}
 	fclose(file);
@@ -241,7 +245,7 @@ bool camInterface::printCamFeatureList(uint64_t GUID, const char* featureListFil
 bool camInterface::printCamFeatureList(int index, const char* featureListFilename){
 	uint64_t GUID = Index2GUID(index);
 		if(GUID){
-			cout<<"Error retrieving GUID\n";
+			ROS_INFO_STREAM("Error retrieving GUID\n");
 			ros::shutdown();
 		}
 		guid = GUID;
@@ -254,18 +258,18 @@ bool camInterface::printCamFeatureList(const char* featureListFilename){
 		  		          "IRIS", "FOCUS", "TEMPERATURE", "TRIGGER", "TRIGGER_DELAY", "WHITE_SHADING", "FRAME_RATE", "ZOOM",
 				          "PAN", "TILT", "OPTICAL_FILTER", "CAPTURE_SIZE", "CAPTURE_QUALITY"};
 	if(!guid){
-	  cout<<"GUID not known already\n";
+	  ROS_INFO_STREAM("GUID not known already\n");
 	  return false;
 	}
 	ofstream featureListFile(featureListFilename);
 	if(!featureListFile){
-		cout<<"Error opening feature list file\n";
+		ROS_INFO_STREAM("Error opening feature list file\n");
 		return false;
 	}
 	if(!cam){
 		cam = dc1394_camera_new(dc1394.dc, guid);
 		if(!cam){
-		  cout<<"No cameras found of given GUID.\n";
+		  ROS_INFO_STREAM("No cameras found of given GUID.\n");
 		  return false;
 		}
 	}
@@ -273,7 +277,7 @@ bool camInterface::printCamFeatureList(const char* featureListFilename){
 	for(int i=0; i<(int)(DC1394_FEATURE_NUM); ++i){
 		err = dc1394_feature_is_present(cam, (dc1394feature_t)(i + DC1394_FEATURE_MIN), &check);
 		if(err < DC1394_SUCCESS){
-			cout<<"Error reading some features\n";
+			ROS_INFO_STREAM("Error reading some features\n");
 			result = false;
 		}
 		else{
@@ -296,7 +300,7 @@ bool camInterface::setCamParameters(uint64_t GUID, const char* featureListFilena
 bool camInterface::setCamParameters(int index, const char* featureListFilename){
 	uint64_t GUID = Index2GUID(index);
 	if(GUID){
-		cout<<"Error retrieving GUID\n";
+		ROS_INFO_STREAM("Error retrieving GUID\n");
 		ros::shutdown();
 	}
 	guid = GUID;
@@ -313,19 +317,19 @@ bool camInterface::setCamParameters(const char* featureListFilename){
 	uint32_t featureValue;
 
 	if(!guid){
-		cout<<"GUID not known already\n";
+		ROS_INFO_STREAM("GUID not known already\n");
 		return false;
 	}
 	ifstream settingsFile(featureListFilename);
 	if(!settingsFile){
-		cout<<"Could not open the settings file.\n";
+		ROS_INFO_STREAM("Could not open the settings file.\n");
 		return false;
 	}
 	string camParameter;
 	if(!cam){
 		cam = dc1394_camera_new(dc1394.dc, guid);
 		if(!cam){
-		  cout<<"No cameras found of given GUID.\n";
+		  ROS_INFO_STREAM("No cameras found of given GUID.\n");
 		  return false;
 		}
 	}
@@ -337,16 +341,16 @@ bool camInterface::setCamParameters(const char* featureListFilename){
 				getline(settingsFile, camParameter);
 				err = dc1394_feature_set_absolute_value(cam, (dc1394feature_t)(i + DC1394_FEATURE_MIN), strtof(camParameter.c_str(), NULL));
 				if(err < DC1394_SUCCESS){
-					cout<<"Error setting parameter: "<<parameter[i]<<"\n";
+					ROS_INFO_STREAM("Error setting parameter: "<<parameter[i]<<"\n");
 					result = false;
 				}
 				errRead = dc1394_feature_get_value(cam, (dc1394feature_t)(i + DC1394_FEATURE_MIN), &featureValue);
 				if(errRead < 0){
-					cout<<"Error reading parameter: "<<parameter[i]<<"\n";
+					ROS_INFO_STREAM("Error reading parameter: "<<parameter[i]<<"\n");
 					result = false;
 				}
 				else{
-					cout<<parameter[i]<<": "<<featureValue;
+					ROS_INFO_STREAM(parameter[i]<<": "<<featureValue);
 				}
 			}
 		}

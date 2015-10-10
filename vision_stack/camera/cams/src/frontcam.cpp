@@ -51,13 +51,13 @@ int main(int argc, char** argv)
 	    	if(type == "GUID"){
 	    		cameraNo = fc.GUID2Index((uint64_t)strtoull(argv[1], NULL, 16));
 	    		if(cameraNo<0){
-					cout<<"Failed to determine index with the given GUID.\n";
+					ROS_INFO_STREAM("Failed to determine index with the given GUID.\n");
 					ros::shutdown();
 			    }
 			    ROS_INFO_STREAM("cameraNo: "<<cameraNo);
-			    fc.printCamDetails("bottomCamSet.st");
-			    fc.printCamFeatureList("bottomCamFeatureList.ls");
-                fc.setCamParameters("bottomCamSettings.st");
+			    //fc.printCamDetails("bottomCamSet.st");
+			    //fc.printCamFeatureList("bottomCamFeatureList.ls");
+                //fc.setCamParameters("bottomCamSettings.st");
                 cam.open(cameraNo);
                 camOpen = true;
 	    	}
@@ -82,13 +82,13 @@ int main(int argc, char** argv)
     	cameraNo = fc.GUID2Index((uint64_t)0x000A4701120AC45A);
         fc.printCamDetails("frontCamSet.st");
 		if(cameraNo<0){
-			cout<<"Failed to determine index. Make sure the Guppy Pro is connected and then try again.\n";
+			ROS_INFO_STREAM("Failed to determine index. Make sure the Guppy Pro is connected and then try again.\n");
 			ros::shutdown();
 	    }
         ROS_INFO_STREAM("cameraNo: "<<cameraNo);
-        fc.printCamDetails("bottomCamSet.st");
-		fc.printCamFeatureList("bottomCamFeatureList.ls");
-        fc.setCamParameters("bottomCamSettings.st");
+        //fc.printCamDetails("bottomCamSet.st");
+		//fc.printCamFeatureList("bottomCamFeatureList.ls");
+        //fc.setCamParameters("bottomCamSettings.st");
         cam.open(cameraNo);
         camOpen = true;
     }

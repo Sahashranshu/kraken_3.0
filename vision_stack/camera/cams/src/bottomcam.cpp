@@ -1,5 +1,4 @@
 #include <cams/cams.h>
-#include <string>
 
 
 int cameraNo;
@@ -15,7 +14,7 @@ void msgCallback(const std_msgs::String::ConstPtr& msg)
 
     if(camMsg == cameraNo && !camOpen)
     {
-	cout<<"inside msg callback\n";
+	ROS_INFO_STREAM("inside msg callback\n");
         if(cam.open(cameraNo))
         {
             cout << "BottomCam opened successfully." << endl;
@@ -52,7 +51,7 @@ int main(int argc, char** argv)
 	    	if(type == "GUID"){
 	    		cameraNo = bc.GUID2Index((uint64_t)strtoull(argv[1], NULL, 16));
 	    		if(cameraNo<0){
-					cout<<"Failed to determine index with the given GUID.\n";
+					ROS_INFO_STREAM("Failed to determine index with the given GUID.\n");
 					ros::shutdown();
 			    }
 				ROS_INFO_STREAM("cameraNo: "<<cameraNo);
@@ -82,12 +81,13 @@ int main(int argc, char** argv)
     {
     	cameraNo = bc.GUID2Index((uint64_t)0x00305300013A66F1);
     	if(cameraNo<0){
-			cout<<"Failed to determine index. Make sure the bottomcam Basler is connected and then try again.\n";
+			ROS_INFO_STREAM("Failed to determine index. Make sure the bottomcam Basler is connected and then try again.\n");
+            ROS_INFO_STREAM("cameraNo when failing: "<<cameraNo);
 			ros::shutdown();
     	}
-    	bc.printCamDetails("bottomCamSet.st");
-        bc.printCamFeatureList("bottomCamFeatureList.ls");
-        bc.setCamParameters("bottomCamSettings.st");
+    	//bc.printCamDetails("bottomCamSet.st");
+        //bc.printCamFeatureList("bottomCamFeatureList.ls");
+        //bc.setCamParameters("bottomCamSettings.st");
     	ROS_INFO_STREAM("cameraNo: "<<cameraNo);
     	cam.open(cameraNo);
 	    camOpen = true;
