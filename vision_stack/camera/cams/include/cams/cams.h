@@ -29,7 +29,7 @@ CvDC1394::__CvDC1394(){
 }
 CvDC1394::~__CvDC1394(){
     if (dc)
-    dc1394_free(dc);
+    	dc1394_free(dc);
     dc = 0;
 }
 static CvDC1394 dc1394;
@@ -282,7 +282,7 @@ bool camInterface::printCamFeatureList(const char* featureListFilename){
 		}
 		else{
 			if(check == DC1394_TRUE){
-				featureListFile<< parameter[i];
+				featureListFile<< parameter[i]<<"\n";
 				check = DC1394_FALSE;
 			}
 		}
@@ -337,9 +337,9 @@ bool camInterface::setCamParameters(const char* featureListFilename){
 	while(getline(settingsFile, camParameter)){
 		for(int i = 0; i < DC1394_FEATURE_NUM; ++i){
 			if(camParameter == parameter[i]){
-				//jumping on the next line which is the parameter value of the parameter.
+				//if parameter is found in the file jumping on the next line which is the parameter value of the parameter.
 				getline(settingsFile, camParameter);
-				err = dc1394_feature_set_absolute_value(cam, (dc1394feature_t)(i + DC1394_FEATURE_MIN), strtof(camParameter.c_str(), NULL));
+				err = dc1394_feature_set_value(cam, (dc1394feature_t)(i + (int)DC1394_FEATURE_MIN), (uint32_t)strtof(camParameter.c_str(), NULL));
 				if(err < DC1394_SUCCESS){
 					ROS_INFO_STREAM("Error setting parameter: "<<parameter[i]<<"\n");
 					result = false;
